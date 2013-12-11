@@ -228,6 +228,36 @@ get_cvec_from_file(PyObject *self, PyObject *args)
     return cvec_tuple;
 }
 
+/* Calculate PuzzleCvec from image data */
+static PyObject *
+get_cvec_from_mem(PyObject *self, PyObject *args)
+{
+    PuzzleObject *po = (PuzzleObject *)self;
+    const char *mem;
+    int size;
+
+    if (!PyArg_ParseTuple(args, "s#", &file_path, &size)) {
+        return NULL;
+    }
+
+    // Initialize cvec
+    PuzzleCvec cvec;
+    puzzle_init_cvec(&po->context, &cvec);
+
+    // Fill cvec
+    if (!puzzle_fill_cvec_from_mem(&po->context, &cvec, mem, size)) {
+        puzzle_free_cvec(&po->context, &cvec);
+        return NULL;
+    }
+
+    // Convert cvec to tuple
+    PyObject *cvec_tuple = cvec_to_tuple(&cvec);
+
+    puzzle_free_cvec(&po->context, &cvec);
+
+    return cvec_tuple;
+}
+
 /* Compress cvec tuple */
 static PyObject *
 compress_cvec(PyObject *self, PyObject *args)
@@ -425,6 +455,7 @@ static PyMethodDef PuzzleObjectMethods[] = {
     {"get_distance_from_file", get_distance_from_file, METH_VARARGS, "Get normalized distance between two images."},
     {"get_distance_from_cvec", get_distance_from_cvec, METH_VARARGS, "Get normalized distance between two cvec tuples."},
     {"get_cvec_from_file", get_cvec_from_file, METH_VARARGS, "Get the cvec of an image."},
+    {"get_cvec_from_mem", get_cvec_from_mem, METH_VARARGS, "Get the cvec of an image."},
     {"compress_cvec", compress_cvec, METH_VARARGS, "Compress cvec."},
     {"uncompress_cvec", uncompress_cvec, METH_VARARGS, "Uncompress cvec."},
     {"set_max_width", set_max_width, METH_VARARGS, "Set the max width of images. Default is 3000 pixels."},
